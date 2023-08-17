@@ -1,0 +1,5 @@
+*.pt
+*.log
+slurm/
+dcgm/
+__pycache__/
