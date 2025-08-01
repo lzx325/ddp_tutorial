@@ -1,10 +1,5 @@
 {
-	set -e
-
-	module purge
-	source "/home/liz0f/anaconda3/etc/profile.d/conda.sh"
-	conda deactivate
-	conda activate diffusers
+	source setup.sh
 
 	if false; then
 		python -u -m torch.distributed.run \
@@ -30,17 +25,23 @@
 	rm -f snapshot.pt
 	mkdir -p slurm
 
+	n_nodes=2
+	n_gpus_per_node=4
+	n_proc_per_gpu=3
+	
+
 	sbatch <<- EOF
 	#!/bin/bash
-	#SBATCH --nodes 2
-	#SBATCH --ntasks-per-node 8
+	#SBATCH --account $ACCOUNT
+	#SBATCH --nodes $n_nodes
+	#SBATCH --ntasks-per-node 1
 	#SBATCH -J run-torchrun
-	#SBATCH --partition=batch
+	#SBATCH --partition=preempt
 	#SBATCH -o slurm/%J.out
 	#SBATCH -e slurm/%J.err
 	#SBATCH --time=1:00:00
-	#SBATCH --cpus-per-task=2
-	#SBATCH --gres=gpu:8
+	#SBATCH --cpus-per-task=$((n_gpus_per_node*n_proc_per_gpu))
+	#SBATCH --gres=gpu:$n_gpus_per_node
 	
 	export master_addr="\$(scontrol show hostname \${SLURM_NODELIST} | head -n 1)"
 	echo "master_addr=\${master_addr}"
@@ -48,11 +49,11 @@
 	export LOGLEVEL="DEBUG"
 
 	# using 2 nodes each with 8 GPUs
-	srun --nodes=2 --ntasks-per-node=1 \
+	srun --nodes=$n_nodes --ntasks-per-node=1 \
 	python -u -m torch.distributed.run \
 	--rdzv_conf="join_timeout=60,timeout=30" \
-	--nproc_per_node=8 \
-	--nnodes=2 \
+	--nproc_per_node=$n_gpus_per_node \
+	--nnodes=$n_nodes \
 	--rdzv_id=200 \
 	--rdzv_backend=c10d \
 	--rdzv_endpoint=\${master_addr}:\${master_port} \

@@ -1,25 +1,19 @@
 {
-	set -e
-
-	module purge
-	source "/home/liz0f/anaconda3/etc/profile.d/conda.sh"
-	conda deactivate
-	conda activate diffusers
-	export LD_LIBRARY_PATH="/home/liz0f/anaconda3/envs/diffusers/lib:$LD_LIBRARY_PATH"
+	source setup.sh
 
 	mkdir -p slurm
 
 	sbatch <<- EOF
 	#!/bin/bash
-	#SBATCH --nodes 2
-	#SBATCH --ntasks-per-node 2
+	#SBATCH --nodes 1
+	#SBATCH --ntasks-per-node 1
 	#SBATCH -J torchrun
-	#SBATCH --partition=batch
+	#SBATCH --partition=preempt
 	#SBATCH -o slurm/%J.out
 	#SBATCH -e slurm/%J.err
 	#SBATCH --time=1:00:00
-	#SBATCH --cpus-per-task=16
-	#SBATCH --gres=gpu:8
+	#SBATCH --cpus-per-task=4
+	#SBATCH --gres=gpu:2
 	
 	export master_addr="\$(scontrol show hostname \${SLURM_NODELIST} | head -n 1)"
 	echo "master_addr=\${master_addr}"
