@@ -1,5 +1,5 @@
 CONDA_SH="/cm/shared/apps/Mambaforge/24.3.0-0/etc/profile.d/conda.sh"
-CONDA_ENV_PREFIX="/scratch/m000071-pm02/lzx325/env/SP"
+CONDA_ENV_PREFIX="/scratch/m000071/lzx325/env/SP"
 ACCOUNT="marlowe-m000071"
 
 set -e
